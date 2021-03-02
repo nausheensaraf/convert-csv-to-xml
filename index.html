@@ -1,0 +1,97 @@
+ <!-- on line 57
+    for generating category xml change identifier to category
+    for generating product xml change identifier to product
+-->
+ 
+<html>
+    <head>
+        <style>
+            .download-btn{
+                padding: 7px;
+                border-radius: 3px;
+                background: #e8f7f9;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+
+        <h1>Select a valid category/product CSV file</h1>
+        <div>
+            <input type="file" id="fileUpload" />
+            <input type="button" id="upload" value="Process" onclick="upload()" />
+        </div>
+        <span>URL count will be updated once the processing completes : </span>
+        <span id="itemCounter"></span>
+        <hr />
+        <h2>After the processing has been completed</h2>
+        <label>Filename to Save As :</label>
+         <input id="inputFileNameToSaveAs"></input>
+        <!-- <div id="inputFileNameToSaveAs" style="display:none;">sitemap_products</div> -->
+        <button class="download-btn" onclick="saveTextAsFile()">Download</button>
+        <hr />
+        <br/><br/>
+        <div id="dvCSV"></div>
+
+        <script type="text/javascript">
+            function upload() {
+                var fileUpload = document.getElementById("fileUpload");
+                var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
+                if (regex.test(fileUpload.value.toLowerCase())) {
+                    if (typeof (FileReader) != "undefined") {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var products_arr=[];
+                            var rows = e.target.result.split("\n");
+                            for (var i = 0; i < rows.length; i++) {
+                                products_arr.push(rows[i]);
+                            }
+                            // console.log(products_arr);
+                            var dvCSV = document.getElementById("dvCSV");
+                            var itemCounter = document.getElementById("itemCounter");
+                            var csvData = "";
+                            for(var j=1; j<products_arr.length; j++){
+                                itemCounter.innerHTML = j;
+                                var category ="collections/";
+                                var product ="products/";
+                                var identifier = product;
+                                if (products_arr[j] != ""){                                
+                                    csvData += "<url>\n <loc>https://www.shindigz.com/" + identifier + products_arr[j] +"</loc> \n</url> \n";
+                                }
+                            }
+                            var urlset="<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9' xmlns:image='http://www.google.com/schemas/sitemap-image/1.1'>";
+                            dvCSV.innerText = urlset+"\n" + csvData + "</urlset>";
+                        }
+                        reader.readAsText(fileUpload.files[0]);
+                    } else {
+                        alert("This browser does not support HTML5.");
+                    }
+                } else {
+                    alert("Please upload a valid CSV file.");
+                }
+            }
+
+            function saveTextAsFile(){
+                var textToSave = document.getElementById("dvCSV").innerText;
+                var textToSaveAsBlob = new Blob([textToSave], {type:"text/xml"});
+                var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+                var fileNameToSaveAs = document.getElementById("inputFileNameToSaveAs").value;
+                // var fileNameToSaveAs = document.getElementById("inputFileNameToSaveAs").innerText;
+
+                var downloadLink = document.createElement("a");
+                downloadLink.download = fileNameToSaveAs;
+                downloadLink.innerHTML = "Download File";
+                downloadLink.href = textToSaveAsURL;
+                downloadLink.onclick = destroyClickedElement;
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+            
+                downloadLink.click();
+            }
+        
+            function destroyClickedElement(event){
+                document.body.removeChild(event.target);
+            }
+        </script>
+    </body>
+</html>
